@@ -9,6 +9,12 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="@yield('title', 'Sewa Mobil Medan')">
+    <meta property="og:description" content="Sewa mobil di Medan cepat, mudah, dan terpercaya.">
+    <meta property="og:image" content="{{ asset('og-image.png') }}">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta name="twitter:card" content="summary_large_image">
     <style>
         * { box-sizing: border-box; }
 
