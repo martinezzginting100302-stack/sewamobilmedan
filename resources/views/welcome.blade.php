@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SewaMobilMedan</title>
+    <title>SewaMobilMedan - Solusi Perjalanan Anda</title>
+    <link rel="icon" href="{{ asset('logo.png') }}" type="image/png">
     <style>
         body {
             margin: 0;
@@ -16,7 +17,7 @@
             font-family: 'Segoe UI', Arial, sans-serif;
         }
         .wrap { text-align: center; }
-        .logo { font-size: 60px; }
+        .logo-img { width: 220px; max-width: 80vw; height: auto; border-radius: 16px; }
         h1 { margin: 12px 0 6px; }
         p { color: #94a3b8; margin: 0 0 24px; }
         a.btn {
@@ -34,9 +35,9 @@
 </head>
 <body>
     <div class="wrap">
-        <div class="logo">🚗</div>
+        <img src="{{ asset('logo.png') }}" alt="SewaMobilMedan" class="logo-img">
         <h1>SewaMobilMedan</h1>
-        <p>Sistem Rental Mobil Medan</p>
+        <p>Solusi Perjalanan Anda</p>
         <a class="btn" href="{{ route('dashboard') }}">Buka Dashboard</a>
     </div>
 </body>

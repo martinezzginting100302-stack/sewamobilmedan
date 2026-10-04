@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Booking extends Model
 {
     protected $fillable = [
+        'user_id',
         'car_id',
         'nama_penyewa',
         'no_telepon',
@@ -18,6 +19,9 @@ class Booking extends Model
         'harga_per_hari',
         'total_harga',
         'status',
+        'metode_pembayaran',
+        'status_pembayaran',
+        'bukti_pembayaran',
     ];
 
     protected $casts = [
@@ -28,5 +32,10 @@ class Booking extends Model
     public function car(): BelongsTo
     {
         return $this->belongsTo(Car::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

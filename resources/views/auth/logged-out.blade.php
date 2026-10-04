@@ -7,6 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Logout Berhasil - Sewa Mobil Medan</title>
+    <link rel="icon" href="{{ asset('logo.png') }}" type="image/png">
     <style>
         * { box-sizing: border-box; }
         body {
@@ -43,6 +44,7 @@
 </head>
 <body>
     <div class="card">
+        <img src="{{ asset('logo.png') }}" alt="SewaMobilMedan" style="width:160px;max-width:100%;height:auto;border-radius:12px;margin-bottom:16px;">
         <h1>Logout Berhasil</h1>
         <p>Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.</p>
         <a href="{{ route('login') }}" class="btn" id="loginBtn">Login Kembali</a>

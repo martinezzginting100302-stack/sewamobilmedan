@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Data Booking - Sewa Mobil Medan')
-@section('page_title', 'Data Booking')
+@section('title', 'Data Peminjaman - Sewa Mobil Medan')
+@section('page_title', 'Data Peminjaman (Admin)')
 
 @section('content')
 
@@ -44,6 +44,7 @@
                         <th>Hari</th>
                         <th>Total Harga</th>
                         <th>Status</th>
+                        <th>Pembayaran</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -68,6 +69,14 @@
                                 </span>
                             </td>
                             <td>
+                                <span class="badge badge-{{ ($booking->status_pembayaran ?? 'belum_bayar') === 'lunas' ? 'selesai' : (($booking->status_pembayaran ?? '') === 'menunggu_verifikasi' ? 'menunggu' : 'dibatalkan') }}">
+                                    {{ ucfirst(str_replace('_', ' ', $booking->status_pembayaran ?? 'belum bayar')) }}
+                                </span>
+                                @if($booking->metode_pembayaran)
+                                <div class="text-muted">{{ ucfirst(str_replace('_', ' ', $booking->metode_pembayaran)) }}</div>
+                                @endif
+                            </td>
+                            <td>
                                 <div class="d-flex">
                                     <a class="btn btn-sm btn-outline"
                                        href="{{ route('bookings.show', $booking) }}">Detail</a>
@@ -88,10 +97,10 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8">
+                            <td colspan="9">
                                 <div class="empty">
                                     <div class="big">📅</div>
-                                    Belum ada data booking.
+                                    Belum ada data peminjaman.
                                 </div>
                             </td>
                         </tr>

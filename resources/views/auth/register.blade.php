@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar - Sewa Mobil Medan</title>
+    <link rel="icon" href="{{ asset('logo.png') }}" type="image/png">
+    <link rel="apple-touch-icon" href="{{ asset('logo.png') }}">
+    <meta property="og:image" content="{{ asset('logo.png') }}">
     <style>
         * { box-sizing: border-box; }
         body {
@@ -25,7 +28,7 @@
             box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
         }
         .brand { text-align: center; margin-bottom: 26px; }
-        .brand .logo { font-size: 40px; }
+        .brand .logo-img { width: 180px; max-width: 100%; height: auto; border-radius: 12px; }
         .brand h1 { margin: 10px 0 4px; font-size: 22px; color: #0f172a; }
         .brand p { margin: 0; color: #64748b; font-size: 14px; }
         .alert-error {
@@ -73,6 +76,23 @@
             transition: background .15s;
         }
         .btn:hover { background: #1d4ed8; }
+        .password-wrap { position: relative; }
+        .password-wrap .form-control { padding-right: 46px; }
+        .toggle-password {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            padding: 6px 8px;
+            border-radius: 6px;
+            color: #64748b;
+        }
+        .toggle-password:hover { background: #f1f5f9; color: #0f172a; }
         .alt {
             text-align: center;
             margin-top: 20px;
@@ -85,9 +105,9 @@
 <body>
     <div class="card">
         <div class="brand">
-            <div class="logo">🚗</div>
+            <img src="{{ asset('logo.png') }}" alt="SewaMobilMedan" class="logo-img">
             <h1>SewaMobilMedan</h1>
-            <p>Buat akun baru</p>
+            <p>Solusi Perjalanan Anda — Buat akun baru</p>
         </div>
 
         @if($errors->any())
@@ -123,19 +143,27 @@
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password"
-                       class="form-control"
-                       placeholder="Minimal 8 karakter"
-                       required>
+                <div class="password-wrap">
+                    <input type="password" id="password" name="password"
+                           class="form-control"
+                           placeholder="Minimal 8 karakter"
+                           required>
+                    <button type="button" class="toggle-password" data-target="password"
+                            aria-label="Tampilkan password" title="Tampilkan/sembunyikan password">👁️</button>
+                </div>
             </div>
 
             <div class="form-group">
                 <label for="password_confirmation">Konfirmasi Password</label>
-                <input type="password" id="password_confirmation"
-                       name="password_confirmation"
-                       class="form-control"
-                       placeholder="Ulangi password"
-                       required>
+                <div class="password-wrap">
+                    <input type="password" id="password_confirmation"
+                           name="password_confirmation"
+                           class="form-control"
+                           placeholder="Ulangi password"
+                           required>
+                    <button type="button" class="toggle-password" data-target="password_confirmation"
+                            aria-label="Tampilkan password" title="Tampilkan/sembunyikan password">👁️</button>
+                </div>
             </div>
 
             <button type="submit" class="btn">Daftar</button>
@@ -145,5 +173,17 @@
             Sudah punya akun? <a href="{{ route('login') }}">Masuk di sini</a>
         </div>
     </div>
+    <script>
+        document.querySelectorAll('.toggle-password').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var input = document.getElementById(btn.getAttribute('data-target'));
+                if (!input) return;
+                var show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                btn.textContent = show ? '🙈' : '👁️';
+                btn.setAttribute('aria-label', show ? 'Sembunyikan password' : 'Tampilkan password');
+            });
+        });
+    </script>
 </body>
 </html>

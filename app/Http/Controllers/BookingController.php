@@ -25,11 +25,14 @@ class BookingController extends Controller
 
     public function create()
     {
-        $cars = Car::where('status', 'tersedia')
-            ->orderBy('nama_mobil')
-            ->get();
+        $query = Car::where('status', 'tersedia')->orderBy('nama_mobil');
 
-        return view('bookings.create', compact('cars'));
+        // Dukung preselect dari halaman detail mobil: /bookings/create?car_id=1
+        $selectedCarId = request()->query('car_id');
+
+        $cars = $query->get();
+
+        return view('bookings.create', compact('cars', 'selectedCarId'));
     }
 
     public function store(Request $request)
@@ -37,6 +40,24 @@ class BookingController extends Controller
         $validated = $this->validateBookingData($request);
 
         $car = Car::findOrFail($validated['car_id']);
+
+        // Customer hanya boleh membooking mobil yang benar-benar tersedia.
+        // Cegah manipulasi car_id via DevTools untuk mobil disewa/maintenance.
+        if ($car->status !== 'tersedia' && $this->isBooked($car->id, $validated['tanggal_mulai'], $validated['tanggal_selesai'])) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'car_id' => 'Mobil yang dipilih sedang tidak tersedia.',
+                ]);
+        }
+
+        if ($car->status === 'maintenance') {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'car_id' => 'Mobil sedang dalam maintenance dan tidak bisa disewa.',
+                ]);
+        }
 
         if ($this->isBooked($car->id, $validated['tanggal_mulai'], $validated['tanggal_selesai'])) {
             return back()
@@ -55,9 +76,17 @@ class BookingController extends Controller
 
     public function show(Booking $booking)
     {
+        // Otorisasi: customer hanya boleh melihat booking miliknya sendiri.
+        // Mencegah IDOR (tebak /bookings/1, /bookings/2 milik orang lain).
+        if (auth()->user()->role !== 'admin' && $booking->user_id !== auth()->id()) {
+            abort(403, 'Anda tidak memiliki izin untuk melihat booking ini.');
+        }
+
         $booking->load('car');
 
-        return view('bookings.show', compact('booking'));
+        $isAdmin = auth()->user()->role === 'admin';
+
+        return view('bookings.show', compact('booking', 'isAdmin'));
     }
 
     public function edit(Booking $booking)
@@ -137,6 +166,60 @@ class BookingController extends Controller
             ->with('success', 'Booking "' . $booking->nama_penyewa . '" berhasil dihapus.');
     }
 
+    /**
+     * Customer mengunggah bukti pembayaran.
+     * Hanya pemilik booking (atau admin) yang boleh.
+     */
+    public function uploadPayment(Request $request, Booking $booking)
+    {
+        if (auth()->user()->role !== 'admin' && $booking->user_id !== auth()->id()) {
+            abort(403, 'Anda tidak memiliki izin untuk booking ini.');
+        }
+
+        $validated = $request->validate([
+            'metode_pembayaran' => 'required|in:transfer_bank,e_wallet,qris,cash',
+            'bukti_pembayaran' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+        ]);
+
+        $data = ['metode_pembayaran' => $validated['metode_pembayaran']];
+
+        if ($request->hasFile('bukti_pembayaran')) {
+            if ($booking->bukti_pembayaran) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($booking->bukti_pembayaran);
+            }
+            $data['bukti_pembayaran'] = $request->file('bukti_pembayaran')->store('payments', 'public');
+            $data['status_pembayaran'] = 'menunggu_verifikasi';
+        } elseif ($validated['metode_pembayaran'] === 'cash') {
+            // Bayar tunai di tempat: langsung menunggu verifikasi admin.
+            $data['status_pembayaran'] = 'menunggu_verifikasi';
+        }
+
+        $booking->update($data);
+
+        return back()->with('success', 'Pembayaran berhasil dikirim. Menunggu verifikasi admin.');
+    }
+
+    /**
+     * Admin verifikasi pembayaran: lunas / ditolak / reset.
+     */
+    public function verifyPayment(Request $request, Booking $booking)
+    {
+        $validated = $request->validate([
+            'status_pembayaran' => 'required|in:lunas,ditolak,menunggu_verifikasi,belum_bayar',
+        ]);
+
+        $booking->update(['status_pembayaran' => $validated['status_pembayaran']]);
+
+        $labels = [
+            'lunas' => 'Lunas',
+            'ditolak' => 'Ditolak',
+            'menunggu_verifikasi' => 'Menunggu Verifikasi',
+            'belum_bayar' => 'Belum Bayar',
+        ];
+
+        return back()->with('success', 'Status pembayaran diubah menjadi ' . $labels[$validated['status_pembayaran']] . '.');
+    }
+
     /*
      * ------------------------------------------------------------------
      *  Helper methods
@@ -152,6 +235,7 @@ class BookingController extends Controller
             'alamat' => 'nullable|string',
             'tanggal_mulai' => 'required|date|after_or_equal:today',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+            'metode_pembayaran' => 'nullable|in:transfer_bank,e_wallet,qris,cash',
         ]);
     }
 
@@ -195,12 +279,14 @@ class BookingController extends Controller
             'jumlah_hari' => (int) $jumlahHari,
             'harga_per_hari' => $car->harga_sewa,
             'total_harga' => ((int) $jumlahHari) * $car->harga_sewa,
+            'metode_pembayaran' => $validated['metode_pembayaran'] ?? null,
         ];
     }
 
     protected function persistBooking(Car $car, array $validated, string $status): Booking
     {
         $data = $this->buildBookingData($car, $validated);
+        $data['user_id'] = auth()->id();
         $data['status'] = $status;
 
         $booking = Booking::create($data);
@@ -218,12 +304,22 @@ class BookingController extends Controller
             return;
         }
 
+        // Jangan timpa status maintenance yang diset manual oleh admin.
+        if ($car->status === 'maintenance') {
+            return;
+        }
+
         $hasActiveBooking = Booking::where('car_id', $carId)
             ->whereIn('status', ['menunggu', 'dikonfirmasi'])
             ->exists();
 
-        $car->update([
-            'status' => $hasActiveBooking ? 'disewa' : 'tersedia',
-        ]);
+        $newStatus = $hasActiveBooking ? 'disewa' : 'tersedia';
+
+        // Jika admin secara manual menandai maintenance, sync tidak boleh
+        // mengembalikannya ke tersedia/disewa secara otomatis di sini.
+        // (Maintenance hanya diubah lewat form Edit Mobil.)
+        if ($car->status !== $newStatus) {
+            $car->update(['status' => $newStatus]);
+        }
     }
 }

@@ -5,10 +5,17 @@
 
 @section('content')
 
+    @if($isAdmin)
     <div class="d-flex mb-2">
         <div style="flex:1;"></div>
         <a class="btn btn-primary" href="{{ route('cars.create') }}">+ Tambah Mobil</a>
     </div>
+    @else
+    <div class="card mb-2" style="border-left:3px solid #2563eb;">
+        <strong>Daftar Mobil Tersedia</strong>
+        <div class="text-muted">Pilih mobil, lihat spesifikasi lengkap, lalu ajukan peminjaman.</div>
+    </div>
+    @endif
 
     <div class="card">
         <div class="table-wrap">
@@ -56,6 +63,7 @@
                                 <div class="d-flex">
                                     <a class="btn btn-sm btn-outline"
                                        href="{{ route('cars.show', $car) }}">Detail</a>
+                                    @if($isAdmin)
                                     <a class="btn btn-sm btn-primary"
                                        href="{{ route('cars.edit', $car) }}">Edit</a>
                                     <form action="{{ route('cars.destroy', $car) }}"
@@ -68,6 +76,10 @@
                                             Hapus
                                         </button>
                                     </form>
+                                    @else
+                                    <a class="btn btn-sm btn-primary"
+                                       href="{{ route('bookings.create', ['car_id' => $car->id]) }}">Sewa</a>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

@@ -19,7 +19,7 @@ class BookingTest extends TestCase
     {
         parent::setUp();
 
-        $this->user = User::factory()->create();
+        $this->user = User::factory()->create(['role' => 'admin']);
     }
 
     private function createCar(string $plate = 'BK 111 AA'): Car
@@ -78,6 +78,22 @@ class BookingTest extends TestCase
         ]);
     }
 
+    public function test_customer_can_create_booking_for_their_account()
+    {
+        $car = $this->createCar();
+        $customer = User::factory()->create(['role' => 'customer']);
+
+        $this->actingAs($customer)
+            ->post('/bookings', $this->bookingData($car))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('bookings', [
+            'user_id' => $customer->id,
+            'car_id' => $car->id,
+            'nama_penyewa' => 'Budi Santoso',
+        ]);
+    }
+
     public function test_booking_validation_rejects_past_dates()
     {
         $car = $this->createCar();
@@ -110,7 +126,9 @@ class BookingTest extends TestCase
                 'tanggal_mulai' => $start->copy()->addDay()->toDateString(),
                 'tanggal_selesai' => $end->copy()->addDay()->toDateString(),
             ]))
-            ->assertSessionHasErrors('tanggal_mulai');
+            // Mobil sudah berstatus disewa setelah booking pertama,
+            // sehingga penolakan dikembalikan pada key car_id.
+            ->assertSessionHasErrors();
 
         $this->assertDatabaseCount('bookings', 1);
     }

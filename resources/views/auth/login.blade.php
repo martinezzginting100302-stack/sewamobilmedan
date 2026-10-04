@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Masuk - Sewa Mobil Medan</title>
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
-    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" href="{{ asset('logo.png') }}" type="image/png">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('logo.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('logo.png') }}">
+    <link rel="shortcut icon" href="{{ asset('logo.png') }}">
     <meta property="og:type" content="website">
     <meta property="og:title" content="SewaMobilMedan - Rental Mobil Medan">
     <meta property="og:description" content="Sewa mobil di Medan cepat, mudah, dan terpercaya.">
-    <meta property="og:image" content="{{ asset('og-image.png') }}">
+    <meta property="og:image" content="{{ asset('logo.png') }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta name="twitter:card" content="summary_large_image">
     <style>
@@ -39,8 +39,11 @@
             text-align: center;
             margin-bottom: 26px;
         }
-        .brand .logo {
-            font-size: 40px;
+        .brand .logo-img {
+            width: 180px;
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
         }
         .brand h1 {
             margin: 10px 0 4px;
@@ -115,6 +118,23 @@
             color: #475569;
         }
         .remember-row a { color: #2563eb; text-decoration: none; }
+        .password-wrap { position: relative; }
+        .password-wrap .form-control { padding-right: 46px; }
+        .toggle-password {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            padding: 6px 8px;
+            border-radius: 6px;
+            color: #64748b;
+        }
+        .toggle-password:hover { background: #f1f5f9; color: #0f172a; }
         .alt {
             text-align: center;
             margin-top: 20px;
@@ -127,9 +147,9 @@
 <body>
     <div class="card">
         <div class="brand">
-            <div class="logo">🚗</div>
+            <img src="{{ asset('logo.png') }}" alt="SewaMobilMedan" class="logo-img">
             <h1>SewaMobilMedan</h1>
-            <p>Masuk untuk mengelola rental mobil</p>
+            <p>Solusi Perjalanan Anda — Masuk untuk mengelola rental mobil</p>
         </div>
 
         @if(session('success'))
@@ -160,10 +180,14 @@
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password"
-                       class="form-control"
-                       placeholder="Masukkan password"
-                       required>
+                <div class="password-wrap">
+                    <input type="password" id="password" name="password"
+                           class="form-control"
+                           placeholder="Masukkan password"
+                           required>
+                    <button type="button" class="toggle-password" data-target="password"
+                            aria-label="Tampilkan password" title="Tampilkan/sembunyikan password">👁️</button>
+                </div>
             </div>
 
             <div class="remember-row">
@@ -184,11 +208,23 @@
         </div>
     </div>
 </body>
-</html>    <script>
+</html>
+    <script>
         window.addEventListener("pageshow", function(event) {
             if (event.persisted) {
                 window.location.reload();
             }
+        });
+
+        document.querySelectorAll('.toggle-password').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var input = document.getElementById(btn.getAttribute('data-target'));
+                if (!input) return;
+                var show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                btn.textContent = show ? '🙈' : '👁️';
+                btn.setAttribute('aria-label', show ? 'Sembunyikan password' : 'Tampilkan password');
+            });
         });
     </script>
 </body>

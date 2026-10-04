@@ -1,34 +1,56 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
+use App\Http\Resources\CarResource;
 use App\Models\Car;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class CarController extends Controller
 {
-    public function index()
+    /**
+     * GET /api/cars — customer hanya melihat yang tersedia.
+     */
+    public function index(Request $request)
     {
-        $isAdmin = auth()->user()->role === 'admin';
+        $isAdmin = $request->user()->role === 'admin';
 
         $query = Car::withCount('bookings')->latest('id');
 
-        // Customer dibatasi: hanya melihat mobil yang tersedia + spesifikasinya.
         if (! $isAdmin) {
             $query->where('status', 'tersedia');
+        } elseif ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
         }
 
-        $cars = $query->get();
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_mobil', 'like', "%{$search}%")
+                    ->orWhere('merk', 'like', "%{$search}%")
+                    ->orWhere('plat_nomor', 'like', "%{$search}%");
+            });
+        }
 
-        return view('cars.index', compact('cars', 'isAdmin'));
+        return response()->json([
+            'success' => true,
+            'data' => CarResource::collection($query->get()),
+        ]);
     }
 
-    public function create()
+    public function show(Car $car)
     {
-        return view('cars.create');
+        $car->loadCount('bookings');
+
+        return response()->json([
+            'success' => true,
+            'data' => new CarResource($car),
+        ]);
     }
 
+    /** Admin only */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -47,29 +69,16 @@ class CarController extends Controller
             $validated['foto'] = $request->file('foto')->store('cars', 'public');
         }
 
-        Car::create($validated);
+        $car = Car::create($validated);
 
-        return redirect()
-            ->route('cars.index')
-            ->with('success', 'Data mobil "' . $validated['nama_mobil'] . '" berhasil ditambahkan.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Data mobil berhasil ditambahkan.',
+            'data' => new CarResource($car),
+        ], 201);
     }
 
-    public function show(Car $car)
-    {
-        $car->load([
-            'bookings' => fn ($q) => $q->latest('id'),
-        ]);
-
-        $isAdmin = auth()->user()->role === 'admin';
-
-        return view('cars.show', compact('car', 'isAdmin'));
-    }
-
-    public function edit(Car $car)
-    {
-        return view('cars.edit', compact('car'));
-    }
-
+    /** Admin only */
     public function update(Request $request, Car $car)
     {
         $validated = $request->validate([
@@ -88,23 +97,26 @@ class CarController extends Controller
             if ($car->foto) {
                 Storage::disk('public')->delete($car->foto);
             }
-
             $validated['foto'] = $request->file('foto')->store('cars', 'public');
         }
 
         $car->update($validated);
 
-        return redirect()
-            ->route('cars.index')
-            ->with('success', 'Data mobil "' . $car->nama_mobil . '" berhasil diperbarui.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Data mobil berhasil diperbarui.',
+            'data' => new CarResource($car->fresh()),
+        ]);
     }
 
+    /** Admin only */
     public function destroy(Car $car)
     {
         if ($car->bookings()->exists()) {
-            return back()->withErrors([
-                'car' => 'Mobil tidak dapat dihapus karena masih memiliki data booking.',
-            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Mobil tidak dapat dihapus karena masih memiliki data booking.',
+            ], 422);
         }
 
         if ($car->foto) {
@@ -113,8 +125,9 @@ class CarController extends Controller
 
         $car->delete();
 
-        return redirect()
-            ->route('cars.index')
-            ->with('success', 'Data mobil "' . $car->nama_mobil . '" berhasil dihapus.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Data mobil berhasil dihapus.',
+        ]);
     }
 }

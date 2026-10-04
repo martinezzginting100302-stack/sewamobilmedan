@@ -7,15 +7,15 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>@yield('title', 'Sewa Mobil Medan')</title>
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
-    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" href="{{ asset('logo.png') }}" type="image/png">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('logo.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('logo.png') }}">
+    <link rel="shortcut icon" href="{{ asset('logo.png') }}">
     <meta property="og:type" content="website">
     <meta property="og:title" content="@yield('title', 'Sewa Mobil Medan')">
     <meta property="og:description" content="Sewa mobil di Medan cepat, mudah, dan terpercaya.">
-    <meta property="og:image" content="{{ asset('og-image.png') }}">
+    <meta property="og:image" content="{{ asset('logo.png') }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta name="twitter:card" content="summary_large_image">
     <style>
@@ -470,8 +470,14 @@
 
     <aside class="sidebar">
         <div class="brand">
-            <a href="{{ route('dashboard') }}">🚗 SewaMobilMedan</a>
-            <small>Rental Mobil Medan</small>
+            <a href="{{ route('dashboard') }}" style="display:flex;align-items:center;gap:10px;">
+                <img src="{{ asset('logo.png') }}" alt="SewaMobilMedan"
+                     style="width:44px;height:44px;object-fit:cover;border-radius:10px;background:#fff;padding:2px;">
+                <span>
+                    SewaMobilMedan
+                    <small>Solusi Perjalanan Anda</small>
+                </span>
+            </a>
         </div>
 
         <nav class="nav">
@@ -479,14 +485,29 @@
                 <span class="icons">📊</span> Dashboard
             </a>
             <a href="{{ route('cars.index') }}" class="{{ request()->routeIs('cars.*') ? 'active' : '' }}">
-                <span class="icons">🚙</span> Data Mobil
+                <span class="icons">🚙</span> {{ Auth::user()->role === 'admin' ? 'Data Mobil' : 'Daftar Mobil' }}
             </a>
-            <a href="{{ route('bookings.index') }}" class="{{ request()->routeIs('bookings.*') ? 'active' : '' }}">
-                <span class="icons">📅</span> Booking
-            </a>
-            <a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}">
-                <span class="icons">📈</span> Laporan
-            </a>
+            @if(Auth::user()->role === 'admin')
+                <a href="{{ route('bookings.index') }}" class="{{ request()->routeIs('bookings.*') ? 'active' : '' }}">
+                    <span class="icons">📅</span> Data Peminjaman
+                </a>
+                <a href="{{ route('payments.index') }}" class="{{ request()->routeIs('payments.index') ? 'active' : '' }}">
+                    <span class="icons">💳</span> Data Pembayaran
+                </a>
+                <a href="{{ route('customers.index') }}" class="{{ request()->routeIs('customers.*') ? 'active' : '' }}">
+                    <span class="icons">👥</span> Data Customer
+                </a>
+                <a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}">
+                    <span class="icons">📈</span> Laporan
+                </a>
+            @else
+                <a href="{{ route('bookings.create') }}" class="{{ request()->routeIs('bookings.create') ? 'active' : '' }}">
+                    <span class="icons">📅</span> Ajukan Sewa
+                </a>
+                <a href="{{ route('payments.mine') }}" class="{{ request()->routeIs('payments.mine') ? 'active' : '' }}">
+                    <span class="icons">💳</span> Pembayaran Saya
+                </a>
+            @endif
         </nav>
 
         <div class="sidebar-footer">
@@ -500,7 +521,7 @@
 
             <div class="userbox">
                 <div>
-                    <div class="name">{{ Auth::user()->name }}</div>
+                    <div class="name">{{ Auth::user()->name }} <span class="badge badge-{{ Auth::user()->role === 'admin' ? 'dikonfirmasi' : 'tersedia' }}" style="margin-left:4px;">{{ Auth::user()->role }}</span></div>
                     <div class="email">{{ Auth::user()->email }}</div>
                 </div>
 

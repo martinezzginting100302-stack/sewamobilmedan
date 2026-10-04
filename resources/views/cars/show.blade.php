@@ -13,6 +13,7 @@
             </div>
 
             <div class="d-flex">
+                @if($isAdmin)
                 <a href="{{ route('cars.edit', $car) }}" class="btn btn-sm btn-primary">Edit</a>
                 <form action="{{ route('cars.destroy', $car) }}" method="POST" style="margin:0;">
                     @csrf
@@ -22,6 +23,9 @@
                         Hapus
                     </button>
                 </form>
+                @elseif($car->status === 'tersedia')
+                <a href="{{ route('bookings.create', ['car_id' => $car->id]) }}" class="btn btn-sm btn-primary">Ajukan Sewa</a>
+                @endif
             </div>
         </div>
 
@@ -55,7 +59,7 @@
         </table>
     </div>
 
-    @if($car->relationLoaded('bookings') && $car->bookings->isNotEmpty())
+    @if($isAdmin && $car->relationLoaded('bookings') && $car->bookings->isNotEmpty())
         <div class="card">
             <h2>Riwayat Booking</h2>
 

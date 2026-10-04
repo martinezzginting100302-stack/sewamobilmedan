@@ -20,7 +20,7 @@ class CarTest extends TestCase
     {
         parent::setUp();
 
-        $this->user = User::factory()->create();
+        $this->user = User::factory()->create(['role' => 'admin']);
     }
 
     private function carData(array $overrides = []): array

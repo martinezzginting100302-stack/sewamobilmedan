@@ -13,10 +13,16 @@
             </div>
 
             <div class="d-flex">
+                @if(auth()->user()->role === 'admin')
                 <a href="{{ route('cars.create') }}" class="btn btn-primary">
                     + Tambah Mobil
                 </a>
-                <a href="{{ route('bookings.index') }}" class="btn btn-secondary">
+                @else
+                <a href="{{ route('cars.index') }}" class="btn btn-primary">
+                    Lihat Daftar Mobil
+                </a>
+                @endif
+                <a href="{{ auth()->user()->role === 'admin' ? route('bookings.index') : route('dashboard') }}" class="btn btn-secondary">
                     Kembali
                 </a>
             </div>
@@ -30,8 +36,9 @@
                 <select name="car_id" id="car_id" class="form-control" required>
                     <option value="">-- Pilih Mobil --</option>
                     @foreach($cars as $car)
+                        @php $selected = old('car_id', $selectedCarId ?? ''); @endphp
                         <option value="{{ $car->id }}"
-                            {{ old('car_id') == $car->id ? 'selected' : '' }}>
+                            {{ (string) $selected === (string) $car->id ? 'selected' : '' }}>
                             {{ $car->nama_mobil }} — {{ $car->plat_nomor }} —
                             Rp {{ number_format($car->harga_sewa, 0, ',', '.') }}/hari
                         </option>
@@ -76,9 +83,20 @@
                 </div>
             </div>
 
+            <div class="form-group">
+                <label for="metode_pembayaran">Metode Pembayaran</label>
+                <select name="metode_pembayaran" id="metode_pembayaran" class="form-control">
+                    <option value="">-- Pilih Metode (bisa diisi nanti) --</option>
+                    @foreach(['transfer_bank' => 'Transfer Bank', 'e_wallet' => 'E-Wallet', 'qris' => 'QRIS', 'cash' => 'Tunai (Cash)'] as $val => $label)
+                        <option value="{{ $val }}" {{ old('metode_pembayaran') == $val ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <div class="hint">Bukti pembayaran dapat diunggah setelah pengajuan dibuat, di halaman Detail.</div>
+            </div>
+
             <div class="d-flex">
                 <button type="submit" class="btn btn-primary">Buat Booking</button>
-                <a href="{{ route('bookings.index') }}" class="btn btn-secondary">Batal</a>
+                <a href="{{ auth()->user()->role === 'admin' ? route('bookings.index') : route('cars.index') }}" class="btn btn-secondary">Batal</a>
             </div>
         </form>
 
