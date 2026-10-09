@@ -42,6 +42,13 @@ class CarTest extends TestCase
         $this->get('/cars')->assertRedirect('/login');
     }
 
+    public function test_car_create_page_can_be_rendered_by_admin()
+    {
+        $this->actingAs($this->user)
+            ->get('/cars/create')
+            ->assertOk();
+    }
+
     public function test_cars_index_can_be_rendered()
     {
         Car::create($this->carData());

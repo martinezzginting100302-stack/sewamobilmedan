@@ -53,7 +53,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/cars', [CarController::class, 'index'])
         ->name('cars.index');
 
+    // whereNumber agar /cars/create tidak tertangkap sebagai {car}.
     Route::get('/cars/{car}', [CarController::class, 'show'])
+        ->whereNumber('car')
         ->name('cars.show');
 
     Route::middleware('role:admin')->group(function () {
